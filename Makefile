@@ -1,16 +1,15 @@
 BOARD		:= arduino:avr:leonardo
 TARGET		:= main/main.cpp
-FLAGS		:= --useprogrammer --port usb -v
-PROGRAMMER	:= arduino:usbasp
+FLAGS		:= -v
 
 all: verify
 	@echo Compilation succesfull. Type \"make flash\" to flash the firmware.
 
 verify:
-	arduino --verify --board $(BOARD) --pref programmer=$(PROGRAMMER) $(FLAGS) $(TARGET)
+	arduino --verify --board $(BOARD) $(FLAGS) $(TARGET)
 
 installdeps:
 	arduino --install-library EtherSia
 
 flash:
-	arduino --upload --board $(BOARD) --pref programmer=$(PROGRAMMER) $(FLAGS) $(TARGET)
+	arduino --upload --board $(BOARD)  $(FLAGS) $(TARGET)

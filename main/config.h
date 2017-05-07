@@ -3,11 +3,16 @@
  *
  * PASSWORD: Password that must be provided as POST data to "/open"
  * RELAY_TIMEOUT: Number of milliseconds the relay will close the door opener circuit
+ * PIEZO_TIMEOUT: Number of milliseconds after which the piezo buzzer stops automatically
+ * PIEZO_BEEP_PERIOD: Number of milliseconds between single piezo buzzer beeps
  */
 #define PASSWORD "wiebJatPabImDaikOpHi"
 #define RELAY_TIMEOUT 5000
 #define RELAY_PIN1 7
 #define RELAY_PIN2 8
+#define PIEZO_PIN A3
+#define PIEZO_TIMEOUT 10000
+#define PIEZO_BEEP_PERIOD 700
 
 /*
  * Network Configuration
