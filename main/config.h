@@ -8,11 +8,14 @@
  */
 #define PASSWORD "wiebJatPabImDaikOpHi"
 #define RELAY_TIMEOUT 5000
+#define PIEZO_TIMEOUT 10000
+#define PIEZO_BEEP_PERIOD 700
+
+// Pin configuration
 #define RELAY_PIN1 7
 #define RELAY_PIN2 8
 #define PIEZO_PIN A3
-#define PIEZO_TIMEOUT 10000
-#define PIEZO_BEEP_PERIOD 700
+#define MONITORING_CONTACT_PIN A2
 
 /*
  * Network Configuration

@@ -33,10 +33,11 @@ void setup() {
 	pinMode(RELAY_PIN1, OUTPUT);
 	pinMode(RELAY_PIN2, OUTPUT);
 	pinMode(PIEZO_PIN, OUTPUT);
+	pinMode(MONITORING_CONTACT_PIN, INPUT_PULLUP);
 
 	// Setup ethernet
 	if (ether.begin(macAddress) == false) {
-		SERIALPORT.println("Failed to configure Ethernet");
+		SERIALPORT.println("Failed to configure Ethernet, no IPv6 router on network?");
 	} else {
 		SERIALPORT.print("Link-local address: ");
 		ether.linkLocalAddress().println(SERIALPORT);
@@ -104,6 +105,10 @@ void loop() {
 		} else {
 			http.println(F("invalid password"));
 		}
+		http.sendReply();
+	} else if (http.isGet(F("/doorstate"))) {
+		http.printHeaders(http.typeHtml);
+		http.println(digitalRead(MONITORING_CONTACT_PIN) ? "open" : "closed");
 		http.sendReply();
 	} else {
 		http.notFound();
