@@ -1,10 +1,13 @@
 #include <EtherSia.h>
 #include <Arduino.h>
+#include <string.h>
 
 #include "config.h"
+#include "ntp.h"
 
 EtherSia_W5100 ether(W5100_CSPIN);
 HTTPServer http(ether);
+UDPSocket ntpsocket(ether);
 
 // Frequency is approx. 2000Hz, duration in ms
 void sound(uint16_t duration) {
@@ -16,8 +19,43 @@ void sound(uint16_t duration) {
 	}
 }
 
+#if 0
+void printHash(uint8_t hash[32]) {
+	for (uint8_t i = 0; i < 32; ++i)
+		SERIALPORT.print(hash[i], HEX);
+	SERIALPORT.println("\r\n");
+}
+#endif
+
 bool checkKey(String key) {
-	return String(PASSWORD).equals(key);
+	#define HASHLEN 32
+
+	if (key.length() != HASHLEN * 2) return false;
+	SERIALPORT.println("Checking key: " + key);
+
+	// Convert key from HEX to binary format
+	uint8_t key_binary[HASHLEN];
+	for (uint8_t i = 0; i < HASHLEN; ++i)
+		key_binary[i] = strtol(key.substring(i * 2, i * 2 + 2).c_str(), NULL, 16);
+
+	// Round NTP echo to time slots with duration AUTH_TIMEFRAME
+	unsigned long current_hashtime = (epoch() / AUTH_TIMEFRAME) * AUTH_TIMEFRAME;
+	unsigned long last_hashtime = (epoch() / AUTH_TIMEFRAME - 1) * AUTH_TIMEFRAME;
+	unsigned long next_hashtime = (epoch() / AUTH_TIMEFRAME + 1) * AUTH_TIMEFRAME;
+
+	// Generate strings to hash: Shared PASSWORD with time as decimal string concatenated
+	String current_hashstring = String(PASSWORD) + String(current_hashtime);
+	String last_hashstring = String(PASSWORD) + String(last_hashtime);
+	String next_hashstring = String(PASSWORD) + String(next_hashtime);
+
+	// Check hashes of current, previous and next authentication timeframe; all are considered equally valid
+	uint8_t hash[HASHLEN];
+	FIPS202_SHA3_256(current_hashstring.c_str(), current_hashstring.length(), hash);
+	if (memcmp(hash, key_binary, HASHLEN) == 0) return true;
+	FIPS202_SHA3_256(last_hashstring.c_str(), last_hashstring.length(), hash);
+	if (memcmp(hash, key_binary, HASHLEN) == 0) return true;
+	FIPS202_SHA3_256(next_hashstring.c_str(), next_hashstring.length(), hash);
+	return memcmp(hash, key_binary, HASHLEN) == 0;
 }
 
 void setup() {
@@ -45,6 +83,9 @@ void setup() {
 		ether.globalAddress().println(SERIALPORT);
 		SERIALPORT.println("Ethernet link is ready");
 	}
+
+	// Setup SNTP client
+	ntp_init(&ntpsocket);
 }
 
 void loop() {
@@ -72,6 +113,10 @@ void loop() {
 
 	ether.receivePacket();
 
+	/*** Handle SNTP Protocol ***/
+	handle_ntp();
+
+	/*** Handle HTTP Requests ***/
 	if (http.isGet(F("/"))) {
 		http.printHeaders(http.typeHtml);
 		http.println(F("<h1>physdoor board</h1>"));
@@ -84,7 +129,7 @@ void loop() {
 			relay_open_time = millis();
 			http.println(F("ok"));
 		} else {
-			http.println(F("invalid password"));
+			http.println(F("invalid key"));
 		}
 		http.sendReply();
 	} else if (http.isPost(F("/beep_start"))) {
@@ -94,7 +139,7 @@ void loop() {
 			piezo_nextbeep_time = millis();
 			http.println(F("ok"));
 		} else {
-			http.println(F("invalid password"));
+			http.println(F("invalid key"));
 		}
 		http.sendReply();
 	} else if (http.isPost(F("/beep_stop"))) {
@@ -103,12 +148,16 @@ void loop() {
 			piezo_start_time = 0;
 			http.println(F("ok"));
 		} else {
-			http.println(F("invalid password"));
+			http.println(F("invalid key"));
 		}
 		http.sendReply();
 	} else if (http.isGet(F("/doorstate"))) {
 		http.printHeaders(http.typeHtml);
 		http.println(digitalRead(MONITORING_CONTACT_PIN) ? "open" : "closed");
+		http.sendReply();
+	} else if (http.isGet(F("/epoch"))) {
+		http.printHeaders(http.typeHtml);
+		http.println(epoch());
 		http.sendReply();
 	} else {
 		http.notFound();
