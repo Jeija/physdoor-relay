@@ -33,6 +33,11 @@ bool checkKey(String key) {
 	if (key.length() != HASHLEN * 2) return false;
 	SERIALPORT.println("Checking key: " + key);
 
+	// Retrieve password from EEPROM or use default one
+	char passwd[EEPROM_PASSWORD_MAXLEN];
+	if (!readSetting(EEPROM_OFFSET_PASSWORD, passwd))
+		strcpy(passwd, DEFAULT_PASSWORD);
+
 	// Convert key from HEX to binary format
 	uint8_t key_binary[HASHLEN];
 	for (uint8_t i = 0; i < HASHLEN; ++i)
@@ -43,10 +48,10 @@ bool checkKey(String key) {
 	unsigned long last_hashtime = (epoch() / AUTH_TIMEFRAME - 1) * AUTH_TIMEFRAME;
 	unsigned long next_hashtime = (epoch() / AUTH_TIMEFRAME + 1) * AUTH_TIMEFRAME;
 
-	// Generate strings to hash: Shared PASSWORD with time as decimal string concatenated
-	String current_hashstring = String(PASSWORD) + String(current_hashtime);
-	String last_hashstring = String(PASSWORD) + String(last_hashtime);
-	String next_hashstring = String(PASSWORD) + String(next_hashtime);
+	// Generate strings to hash: Shared password with time as decimal string concatenated
+	String current_hashstring = String(passwd) + String(current_hashtime);
+	String last_hashstring = String(passwd) + String(last_hashtime);
+	String next_hashstring = String(passwd) + String(next_hashtime);
 
 	// Check hashes of current, previous and next authentication timeframe; all are considered equally valid
 	uint8_t hash[HASHLEN];
@@ -72,6 +77,7 @@ void setup() {
 	pinMode(RELAY_PIN2, OUTPUT);
 	pinMode(PIEZO_PIN, OUTPUT);
 	pinMode(MONITORING_CONTACT_PIN, INPUT_PULLUP);
+	pinMode(ADMIN_BUTTON_PIN, INPUT_PULLUP);
 
 	// Setup ethernet
 	if (ether.begin(macAddress) == false) {
@@ -158,6 +164,24 @@ void loop() {
 	} else if (http.isGet(F("/epoch"))) {
 		http.printHeaders(http.typeHtml);
 		http.println(epoch());
+		http.sendReply();
+	} else if (http.isPost(F("/set_password"))) {
+		http.printHeaders(http.typeHtml);
+		if (digitalRead(ADMIN_BUTTON_PIN) == 0) {
+			writeSetting(EEPROM_OFFSET_PASSWORD, http.body());
+			http.println(F("ok"));
+		} else {
+			http.println(F("no admin"));
+		}
+		http.sendReply();
+	} else if (http.isPost(F("/set_ntpserv"))) {
+		http.printHeaders(http.typeHtml);
+		if (digitalRead(ADMIN_BUTTON_PIN) == 0) {
+			writeSetting(EEPROM_OFFSET_NTPIP, http.body());
+			http.println(F("ok"));
+		} else {
+			http.println(F("no admin"));
+		}
 		http.sendReply();
 	} else {
 		http.notFound();

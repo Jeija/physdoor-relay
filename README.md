@@ -15,8 +15,11 @@ The HTTP server provides the following APIs:
 * `POST` to `/beep_stop`: Stop piezo beeper immediately. `POST` data is authentication key as described in the section below.
 * `GET` to `/doorstate`: Get state of monitoring contact: `open` or `closed`
 * `GET` to `/epoch`: Get unix epoch of board's internal time (obtained using NTP), can be used for debugging or monitoring
+* `POST` to `/set_password`: Set shared plaintext password, `POST` data is new password. Requires *admin button* to be pressed.
+* `POST` to `/set_ntpserv`: Set IPv6 address of NTP server, `POST` data is new address. Requires *admin button* to be pressed.
 
-The `POST` requests will respond with either `ok` for successful execution of the command or `invalid key` if the key provided as `POST` is invalid.
+The *admin button* is a button connected between `ADMIN_BUTTON_PIN` and GND that has to be pressed (so that `ADMIN_BUTTON_PIN` is pulled low) while executing administrative commands, otherwise those commands will return `no admin`. This way, physcial access to the DFR0222 is required for changing settings.
+The other `POST` requests will respond with either `ok` for successful execution of the command or `invalid key` if the key provided as `POST` is invalid.
 
 ## Authentication
 The relay board and the physdoor server share the password configured as `PASSWORD` in `config.h`. In order to protect against replay attacks, this password gets hashed together with a rounded timestamp so that each hash is only ever valid for a short time period (`AUTH_TIMEFRAME` setting, default 10 seconds). Therefore, the relay board and the physdoor server need to synchronize their system clocks using NTP. The relay board compares the hash provided as `POST` data to the hash that is valid for the current time period as well as the hashes for the previous and next time period, so that slight system clock offsets or network delays are accounted for.

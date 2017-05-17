@@ -18,7 +18,6 @@ unsigned long last_response_timestamp = 0;
 
 void ntp_init(UDPSocket *ntpsocket) {
 	udp = ntpsocket;
-	udp->setRemoteAddress(NTPSERV, NTP_PORT);
 }
 
 void handle_ntp() {
@@ -41,6 +40,12 @@ void handle_ntp() {
 	// Preserve the structure of the if-condition (millis() - last_request_time) so that millis()
 	// overflowing gets handled correctly by sending an NTP request earlier.
 	if (last_request_time == 0 || millis() - last_request_time >= ((unsigned long) NTP_POLLING_INTERVAL * 1000)) {
+		// Set NTP server address (EEPROM contents might have changed), IPv6 may not be longer than 46 characters including trailing null
+		char ntpip[46];
+		if (!readSetting(EEPROM_OFFSET_NTPIP, ntpip))
+			strcpy(ntpip, DEFAULT_NTPSERV);
+		udp->setRemoteAddress(ntpip, NTP_PORT);
+
 		// Set the NTP packet to all-zeros
 		ntpType ntpPacket;
 		memset(&ntpPacket, 0, sizeof(ntpPacket));
