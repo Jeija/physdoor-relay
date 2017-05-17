@@ -35,7 +35,7 @@ This code can be used to generate a valid hash for the current authentication pe
 ```bash
 export RELAYPASSWORD=wiebJatPabImDaikOpHi # Replace placeholder password with your own
 export RELAYIP=[2001:YOUR:BOARD:IP:HERE::]
-export AUTH_TIMEFRAME=10
+export AUTH_TIMEFRAME=50
 curl --data $(echo -n "$RELAYPASSWORD$(($(($(date +%s) / $AUTH_TIMEFRAME)) * $AUTH_TIMEFRAME))" | rhash --sha3-256 -p %x{sha3-256} -) http://$RELAYIP/open
 ```
 

@@ -11,7 +11,7 @@
 #define RELAY_TIMEOUT 5000
 #define PIEZO_TIMEOUT 10000
 #define PIEZO_BEEP_PERIOD 700
-#define AUTH_TIMEFRAME 10
+#define AUTH_TIMEFRAME 50
 
 // Pin configuration
 #define RELAY_PIN1 7
