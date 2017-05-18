@@ -6,7 +6,7 @@
 ## Services
 At startup, the board performs SLAAC to obtain a global IPv6 address. Make sure an IPv6 router is available on the local network, otherwise the board will fail to boot.
 
-The Relay Board runs an HTTP server and an SNTP client for time synchronization. By default, the SNTP client connects to one of Google's NTP servers at `2001:4860:4806::`.
+The Relay Board runs an HTTP server and an SNTP client for time synchronization.
 
 The HTTP server provides the following APIs:
 * `GET` to `/`: Webpage containing only `"<h1>physdoor board</h1>"`, can be used for debugging or monitoring
