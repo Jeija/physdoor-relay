@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include <avr/wdt.h>
+
 #include "config.h"
 #include "ntp.h"
 
@@ -64,6 +66,9 @@ bool checkKey(String key) {
 }
 
 void setup() {
+	// Enable watchdog with 4s timeout
+	wdt_enable(WDTO_4S);
+
 	MACAddress macAddress(MACADDR);
 
 	// Setup serial port
@@ -95,6 +100,8 @@ void setup() {
 }
 
 void loop() {
+	wdt_reset();
+
 	static unsigned long relay_open_time = 0;
 	static unsigned long piezo_start_time = 0;
 	static unsigned long piezo_nextbeep_time = 0;
