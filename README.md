@@ -22,7 +22,7 @@ The *admin button* is a button connected between `ADMIN_BUTTON_PIN` and GND that
 The other `POST` requests will respond with either `ok` for successful execution of the command or `invalid key` if the key provided as `POST` is invalid.
 
 ## Authentication
-The relay board and the physdoor server share the password configured as `PASSWORD` in `config.h`. In order to protect against replay attacks, this password gets hashed together with a rounded timestamp so that each hash is only ever valid for a short time period (`AUTH_TIMEFRAME` setting, default 10 seconds). Therefore, the relay board and the physdoor server need to synchronize their system clocks using NTP. The relay board compares the hash provided as `POST` data to the hash that is valid for the current time period as well as the hashes for the previous and next time period, so that slight system clock offsets or network delays are accounted for.
+The relay board and the physdoor server share the password configured as `PASSWORD` in `config.h`. In order to protect against replay attacks, this password gets hashed together with a rounded timestamp so that each hash is only ever valid for a short time period (`AUTH_TIMEFRAME` setting, default 50 seconds). Therefore, the relay board and the physdoor server need to synchronize their system clocks using NTP. The relay board compares the hash provided as `POST` data to the hash that is valid for the current time period as well as the hashes for the previous and next time period, so that slight system clock offsets or network delays are accounted for.
 
 ### Manually Generate Hash
 The hash for the current authentication period can be calculated as follows:
